@@ -1,4 +1,4 @@
-package com.kakiridev.simplywallet.simplyintervaltimer;
+package com.kakiridev.SIT.simplyintervaltimer;
 
 import org.junit.Test;
 

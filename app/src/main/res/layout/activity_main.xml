@@ -3,11 +3,12 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="horizontal"
-    android:background="#3E0000"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:background="#342525"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.kakiridev.simplywallet.simplyintervaltimer.MainActivity">
+    tools:context="com.kakiridev.SIT.simplyintervaltimer.MainActivity">
 
     <LinearLayout
         android:id="@+id/LL_Timer"
@@ -119,7 +120,7 @@
 
                 <EditText
                     android:id="@+id/ET_intervalMin"
-                    android:background="#380303"
+                    android:background="#752929"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -134,7 +135,7 @@
                     android:layout_height="match_parent" />
                 <EditText
                     android:id="@+id/ET_intervalSec"
-                    android:background="#380303"
+                    android:background="#752929"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -162,7 +163,7 @@
 <!-- liczba powtórzeń -->
             <EditText
                 android:id="@+id/ET_intervalCount"
-                android:background="#380303"
+                android:background="#752929"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_column="1"
@@ -198,7 +199,7 @@
 
                 <EditText
                     android:id="@+id/ET_breaklMin"
-                    android:background="#380303"
+                    android:background="#752929"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -214,7 +215,7 @@
 
                 <EditText
                     android:id="@+id/ET_breakSec"
-                    android:background="#380303"
+                    android:background="#752929"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -245,7 +246,7 @@
 <!-- SERIE -->
             <EditText
                 android:id="@+id/ET_intervalSeries"
-                android:background="#380303"
+                android:background="#752929"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_column="1"
@@ -278,5 +279,19 @@
                 android:layout_row="9"
                 android:layout_columnWeight="1"/>
         </GridLayout>
+
     </LinearLayout>
+
+    <com.google.android.gms.ads.AdView
+        xmlns:ads="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/adView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_alignParentBottom="true"
+        ads:adSize="BANNER"
+        android:background="@color/colorAccent"
+        ads:adUnitId="ca-app-pub-8343407965657663/6900531377">
+    </com.google.android.gms.ads.AdView>
+
 </LinearLayout>

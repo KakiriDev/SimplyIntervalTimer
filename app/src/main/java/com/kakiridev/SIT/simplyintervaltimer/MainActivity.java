@@ -1,4 +1,4 @@
-package com.kakiridev.simplywallet.simplyintervaltimer;
+package com.kakiridev.SIT.simplyintervaltimer;
 
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
@@ -10,10 +10,17 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
+
+
+    private AdView mAdView;
 
     LinearLayout LL_Timer, LL_Menu;
     /** menu **/
@@ -33,6 +40,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        MobileAds.initialize(this, "ca-app-pub-8343407965657663~3060933681");
+        mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+
+
 
         btn_Start = findViewById(R.id.btn_start);
         btn_stop = findViewById(R.id.btn_stop);
@@ -140,22 +154,22 @@ public class MainActivity extends AppCompatActivity {
 
                         if(accWorkTime > 0) {
 
-                            //pierwszy cykl work
+//pierwszy cykl work
                             if(accWorkTime == mWorkTime){
                                 //ustawia nowy cykl powtorzenia
                                 setTotalRepeats(accWorkCount, mWorkCount);
                             }
 
-                            //normalny tryb work
+//normalny tryb work
                             setWorkTime(accWorkTime);
                             accWorkTime--;
 
                         } else if (accWorkTime == 0){
-                            //ostatni cykl work
+//ostatni cykl work
                             setWorkTime(accWorkTime);
 
                             if(accWorkCount < mWorkCount){
-                                //zwiększenie powtorzenia / wyzerowanie czasu cwiczenia
+//zwiększenie powtorzenia / wyzerowanie czasu cwiczenia
                                 accWorkCount++;
 //                                setTotalRepeats(accWorkCount, mWorkCount);
 //                                setWorkTime(accWorkTime);
@@ -169,10 +183,12 @@ public class MainActivity extends AppCompatActivity {
                                     if (accRestTime < 0 ){
                                         accRestTime = mRestTime;
                                     } else if(accRestTime > 0) {
+//start rest series
+                                        startRest();
                                         setRestTime(accRestTime);
                                         accRestTime--;
                                     } else if(accRestTime == 0) {
-                                        //ostatnia sekunda przerwy
+//ostatnia sekunda przerwy
                                         //accRestTime = mRestTime;
                                         //setRestTime(accRestTime);
                                         mAccSeries++;
@@ -181,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
                                         accWorkCount = 1;
                                         setTotalRepeats(accWorkCount, mWorkCount);
                                         accRestTime--;
+                                        startWork();
                                     }
                                 } else if (mSeriesCount == mAccSeries){
                                     //ostatnia seria, nie potrzebuje odpoczynku
@@ -188,7 +205,6 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         }
-
                         totalTime--;
                     }
                 });

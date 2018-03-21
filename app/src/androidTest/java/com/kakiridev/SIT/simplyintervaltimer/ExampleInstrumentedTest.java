@@ -1,4 +1,4 @@
-package com.kakiridev.simplywallet.simplyintervaltimer;
+package com.kakiridev.SIT.simplyintervaltimer;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
