@@ -4,11 +4,15 @@ import android.graphics.Typeface;
 import android.media.MediaPlayer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -17,7 +21,7 @@ import com.google.android.gms.ads.MobileAds;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
 
     private AdView mAdView;
@@ -35,6 +39,8 @@ public class MainActivity extends AppCompatActivity {
 
     int mWorkTime, accWorkTime, mWorkCount, accWorkCount, mRestTime, accRestTime, mSeriesCount, mAccSeries, totalTime;
 
+    MediaPlayer mp_time_sound, mp_finish_5s, mp_finish_sound;
+
     Timer t;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +53,11 @@ public class MainActivity extends AppCompatActivity {
         mAdView.loadAd(adRequest);
 
 
+        initButton();
+
+        mp_time_sound = MediaPlayer.create(this, R.raw.beep);
+        mp_finish_5s = MediaPlayer.create(this, R.raw.drum);
+        mp_finish_sound = MediaPlayer.create(this, R.raw.fixbell);
 
         btn_Start = findViewById(R.id.btn_start);
         btn_stop = findViewById(R.id.btn_stop);
@@ -64,23 +75,28 @@ public class MainActivity extends AppCompatActivity {
         btn_Start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                intervalMin = Integer.parseInt(ET_intervalMin.getText().toString());
-                intervalSec = Integer.parseInt(ET_intervalSec.getText().toString());
-                intervalCount = Integer.parseInt(ET_intervalCount.getText().toString());
-                breaklMin = Integer.parseInt(ET_breaklMin.getText().toString());
-                breakSec = Integer.parseInt(ET_breakSec.getText().toString());
-                intervalSeries = Integer.parseInt(ET_intervalSeries.getText().toString());
+
+                intervalMin = checkEmptyField(ET_intervalMin.getText().toString());
+                intervalSec = checkEmptyField(ET_intervalSec.getText().toString());
+                intervalCount = checkEmptyField(ET_intervalCount.getText().toString());
+                breaklMin = checkEmptyField(ET_breaklMin.getText().toString());
+                breakSec = checkEmptyField(ET_breakSec.getText().toString());
+                intervalSeries = checkEmptyField(ET_intervalSeries.getText().toString());
 
                 int timeInterval = intervalMin * 60 + intervalSec;
                 int timeBreak = breaklMin * 60 + breakSec;
 
-                startTimer(timeInterval, intervalCount, timeBreak, intervalSeries);
+                if (timeInterval > 0) {
+                    startTimer(timeInterval, intervalCount, timeBreak, intervalSeries);
 
-                mp.start();
-                btn_Start.setVisibility(View.GONE);
-                LL_Menu.setVisibility(View.GONE);
-                LL_Timer.setVisibility(View.VISIBLE);
-                btn_stop.setVisibility(View.VISIBLE);
+                    mp.start();
+                    btn_Start.setVisibility(View.GONE);
+                    LL_Menu.setVisibility(View.GONE);
+                    LL_Timer.setVisibility(View.VISIBLE);
+                    btn_stop.setVisibility(View.VISIBLE);
+                } else {
+                    Toast.makeText(getBaseContext(),"Work time must be > 0s",Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -95,6 +111,158 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    public void initButton(){
+        ImageButton IB_intervalTime_minus = (ImageButton) findViewById(R.id.IB_intervalTime_minus);
+        IB_intervalTime_minus.setOnClickListener(this);
+        ImageButton IB_intervalTime_plus = (ImageButton) findViewById(R.id.IB_intervalTime_plus);
+        IB_intervalTime_plus.setOnClickListener(this);
+        ImageButton IB_intervalCount_minus = (ImageButton) findViewById(R.id.IB_intervalCount_minus);
+        IB_intervalCount_minus.setOnClickListener(this);
+        ImageButton IB_intervalCount_plus = (ImageButton) findViewById(R.id.IB_intervalCount_plus);
+        IB_intervalCount_plus.setOnClickListener(this);
+        ImageButton IB_intervalRest_minus = (ImageButton) findViewById(R.id.IB_intervalRest_minus);
+        IB_intervalRest_minus.setOnClickListener(this);
+        ImageButton IB_intervalRest_plus = (ImageButton) findViewById(R.id.IB_intervalRest_plus);
+        IB_intervalRest_plus.setOnClickListener(this);
+        ImageButton IB_Series_minus = (ImageButton) findViewById(R.id.IB_Series_minus);
+        IB_Series_minus.setOnClickListener(this);
+        ImageButton IB_Series_plus = (ImageButton) findViewById(R.id.IB_Series_plus);
+        IB_Series_plus.setOnClickListener(this);
+
+    }
+
+    public void setEditTextValue(boolean addValue, int etVersion){
+
+        if (etVersion == 1){ //interval time
+            int min = Integer.parseInt(ET_intervalMin.getText().toString());
+            int sec = Integer.parseInt(ET_intervalSec.getText().toString());
+Log.d("aaaa", String.valueOf(sec));
+            if (addValue) {
+
+                if (sec == 60) {
+                    ET_intervalSec.setText("00");
+                    min++;
+                    ET_intervalMin.setText(String.valueOf(min));
+                    //ET_intervalSec.setText(00);
+                    //ET_intervalMin.setText(min++);
+                } else {
+                    sec++;
+                    ET_intervalSec.setText(String.valueOf(sec));
+                }
+            } else {
+                if (sec == 0) {
+                    if(min > 0) {
+                        ET_intervalSec.setText("60");
+                        min--;
+                        ET_intervalMin.setText(min);
+                    }
+                } else {
+                    ET_intervalSec.setText("00");
+                }
+            }
+
+        } else if (etVersion == 2){ // interval count
+            int count = Integer.parseInt(ET_intervalCount.getText().toString());
+
+            if (addValue) {
+                ET_intervalCount.setText(count++);
+            } else {
+                if(count > 0) {
+                    ET_intervalCount.setText(count--);
+                }
+            }
+        } else if (etVersion == 3) { // rest time
+
+            int min = Integer.parseInt(ET_breaklMin.getText().toString());
+            int sec = Integer.parseInt(ET_breakSec.getText().toString());
+
+            if (addValue) {
+                if (sec == 60) {
+                    ET_breakSec.setText(00);
+                    ET_breaklMin.setText(min++);
+                } else {
+                    ET_breakSec.setText(sec++);
+                }
+            } else {
+                if (sec == 0) {
+                    if(min > 0) {
+                        ET_breakSec.setText("60");
+                        ET_breaklMin.setText(min--);
+                    }
+                } else {
+                    ET_breakSec.setText(00);
+                }
+            }
+        } else if (etVersion == 4) { // series
+            int series = Integer.parseInt(ET_intervalSeries.getText().toString());
+
+            if (addValue) {
+                ET_intervalSeries.setText(series++);
+            } else {
+                if(series > 0) {
+                    ET_intervalSeries.setText(series--);
+                }
+            }
+        }
+
+    }
+
+
+
+
+    @Override
+    public void onClick(View v) {
+
+        switch (v.getId()) {
+
+            case R.id.IB_intervalTime_minus:
+                setEditTextValue(false, 1);
+                break;
+
+            case R.id.IB_intervalTime_plus:
+                setEditTextValue(true, 1);
+                break;
+
+            case R.id.IB_intervalCount_minus:
+                setEditTextValue(false, 2);
+                break;
+
+            case R.id.IB_intervalCount_plus:
+                setEditTextValue(true, 2);
+                break;
+
+            case R.id.IB_intervalRest_minus:
+                setEditTextValue(false, 3);
+                break;
+
+            case R.id.IB_intervalRest_plus:
+                setEditTextValue(true, 3);
+                break;
+
+            case R.id.IB_Series_minus:
+                setEditTextValue(false, 4);
+                break;
+
+            case R.id.IB_Series_plus:
+                setEditTextValue(true, 4);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    private int checkEmptyField(String str){
+
+        if (TextUtils.isEmpty(str)){
+            return 0;
+        } else {
+            return Integer.parseInt(str);
+        }
+    }
+
+
 
     private void startTimer(final int workTime, final int workCount, final int restTime, final int seriesCount){
         mWorkTime = workTime;
@@ -164,9 +332,17 @@ public class MainActivity extends AppCompatActivity {
                             setWorkTime(accWorkTime);
                             accWorkTime--;
 
+                            if(accWorkTime < 5){
+                                playSound(2);
+                            }
+
                         } else if (accWorkTime == 0){
 //ostatni cykl work
                             setWorkTime(accWorkTime);
+                            if(accRestTime < 0){
+                                playSound(1);
+                            }
+
 
                             if(accWorkCount < mWorkCount){
 //zwiększenie powtorzenia / wyzerowanie czasu cwiczenia
@@ -179,14 +355,17 @@ public class MainActivity extends AppCompatActivity {
 //                                setWorkTime(accWorkTime);
 
                                 if(mAccSeries < mSeriesCount){
-
                                     if (accRestTime < 0 ){
                                         accRestTime = mRestTime;
+                                        //playSound(1);
                                     } else if(accRestTime > 0) {
 //start rest series
                                         startRest();
                                         setRestTime(accRestTime);
                                         accRestTime--;
+                                        if(accRestTime < 5){
+                                            playSound(2);
+                                        }
                                     } else if(accRestTime == 0) {
 //ostatnia sekunda przerwy
                                         //accRestTime = mRestTime;
@@ -198,6 +377,7 @@ public class MainActivity extends AppCompatActivity {
                                         setTotalRepeats(accWorkCount, mWorkCount);
                                         accRestTime--;
                                         startWork();
+                                        playSound(3);
                                     }
                                 } else if (mSeriesCount == mAccSeries){
                                     //ostatnia seria, nie potrzebuje odpoczynku
@@ -316,6 +496,21 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    private void playSound(int type){
+
+        switch (type) {
+            case 1:
+                mp_time_sound.start();
+                break;
+            case 2:
+                mp_finish_5s.start();
+                break;
+            case 3:
+                mp_finish_sound.start();
+                break;
+        }
+
+    }
 
 
 
