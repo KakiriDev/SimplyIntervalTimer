@@ -2,10 +2,12 @@ package com.kakiridev.SIT.simplyintervaltimer;
 
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,7 +27,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     private AdView mAdView;
-
+    private Handler mHandler;
     LinearLayout LL_Timer, LL_Menu;
     /** menu **/
     Button btn_Start;
@@ -115,8 +117,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void initButton(){
         ImageButton IB_intervalTime_minus = (ImageButton) findViewById(R.id.IB_intervalTime_minus);
         IB_intervalTime_minus.setOnClickListener(this);
+
         ImageButton IB_intervalTime_plus = (ImageButton) findViewById(R.id.IB_intervalTime_plus);
         IB_intervalTime_plus.setOnClickListener(this);
+
+        IB_intervalTime_plus.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                switch(event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+
+                        if (mHandler != null) return true;
+                        mHandler = new Handler();
+                        mHandler.postDelayed(mAction, 300); // delay before start iteration
+                        break;
+
+                    case MotionEvent.ACTION_UP:
+                        if (mHandler == null) return true;
+                        mHandler.removeCallbacks(mAction);
+                        mHandler = null;
+                        break;
+                }
+                return false;
+            }
+
+            Runnable mAction = new Runnable() {
+                @Override public void run() {
+                    setEditTextValue(true, 1);
+                    mHandler.postDelayed(this, 100); // delay iteration time
+                }
+            };
+        });
+
+
+
+
         ImageButton IB_intervalCount_minus = (ImageButton) findViewById(R.id.IB_intervalCount_minus);
         IB_intervalCount_minus.setOnClickListener(this);
         ImageButton IB_intervalCount_plus = (ImageButton) findViewById(R.id.IB_intervalCount_plus);
@@ -207,6 +243,7 @@ Log.d("aaaa", String.valueOf(sec));
         }
 
     }
+
 
 
 
