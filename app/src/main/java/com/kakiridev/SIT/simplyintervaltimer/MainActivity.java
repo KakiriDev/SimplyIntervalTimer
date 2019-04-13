@@ -2,9 +2,9 @@ package com.kakiridev.SIT.simplyintervaltimer;
 
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -23,25 +23,64 @@ import com.google.android.gms.ads.MobileAds;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener{
 
+    private boolean Loc_addValue;
+    private int Loc_etVersion;
+
+    long clickDownTime;
 
     private AdView mAdView;
     private Handler mHandler;
-    LinearLayout LL_Timer, LL_Menu;
+
+
+    LinearLayout LL_Timer;
+    LinearLayout LL_Menu;
+
     /** menu **/
-    Button btn_Start;
-    EditText ET_intervalMin, ET_intervalSec, ET_intervalCount, ET_breaklMin, ET_breakSec, ET_intervalSeries;
+    EditText ET_intervalMin;
+    EditText ET_intervalSec;
+    EditText ET_intervalCount;
+    EditText ET_breaklMin;
+    EditText ET_breakSec;
+    EditText ET_intervalSeries;
+
     /** timer **/
-    Button btn_stop;
+    Button btn_start;
+    Button btn_pause;
+    Button btn_reset;
+
     int accStatusMode; //1 - work, 2 - break
 
+    ImageButton IB_intervalTime_minus;
+    ImageButton IB_intervalTime_plus;
+    ImageButton IB_intervalCount_minus;
+    ImageButton IB_intervalCount_plus;
+    ImageButton IB_intervalRest_minus;
+    ImageButton IB_intervalRest_plus;
+    ImageButton IB_Series_minus;
+    ImageButton IB_Series_plus;
 
-    int intervalMin, intervalSec, intervalSeries, intervalCount, breaklMin, breakSec;
+    int intervalMin;
+    int intervalSec;
+    int intervalSeries;
+    int intervalCount;
+    int breaklMin;
+    int breakSec;
 
-    int mWorkTime, accWorkTime, mWorkCount, accWorkCount, mRestTime, accRestTime, mSeriesCount, mAccSeries, totalTime;
+    int mWorkTime;
+    int accWorkTime;
+    int mWorkCount;
+    int accWorkCount;
+    int mRestTime;
+    int accRestTime;
+    int mSeriesCount;
+    int mAccSeries;
+    int totalTime;
 
-    MediaPlayer mp_time_sound, mp_finish_5s, mp_finish_sound;
+    MediaPlayer mp_time_sound;
+    MediaPlayer mp_finish_5s;
+    MediaPlayer mp_finish_sound;
 
     Timer t;
     @Override
@@ -49,30 +88,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        MobileAds.initialize(this, "ca-app-pub-8343407965657663~3060933681");
-        mAdView = (AdView) findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
-
-
+        addAddMob();
         initButton();
+        initMP();
+        initET_LL();
 
-        mp_time_sound = MediaPlayer.create(this, R.raw.beep);
-        mp_finish_5s = MediaPlayer.create(this, R.raw.drum);
-        mp_finish_sound = MediaPlayer.create(this, R.raw.fixbell);
 
-        btn_Start = findViewById(R.id.btn_start);
-        btn_stop = findViewById(R.id.btn_stop);
+        btn_start = findViewById(R.id.btn_start);
+        btn_start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startTimer();
+            }
+        });
 
-        ET_intervalMin = findViewById(R.id.ET_intervalMin);
-        ET_intervalSec = findViewById(R.id.ET_intervalSec);
-        ET_intervalSeries = findViewById(R.id.ET_intervalSeries);
-        ET_intervalCount = findViewById(R.id.ET_intervalCount);
-        ET_breaklMin = findViewById(R.id.ET_breaklMin);
-        ET_breakSec = findViewById(R.id.ET_breakSec);
-        LL_Timer = findViewById(R.id.LL_Timer);
-        LL_Menu = findViewById(R.id.LL_Menu);
-        final MediaPlayer mp = MediaPlayer.create(this, R.raw.beep);
+        btn_pause = findViewById(R.id.btn_pause);
+        btn_pause.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                stopTimer();
+            }
+        });
+
+        btn_reset = findViewById(R.id.btn_reset);
+        btn_reset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                stopTimer();
+            }
+        });
+
+
+        //final MediaPlayer mp = MediaPlayer.create(this, R.raw.beep);
 
         btn_Start.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,23 +132,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 breakSec = checkEmptyField(ET_breakSec.getText().toString());
                 intervalSeries = checkEmptyField(ET_intervalSeries.getText().toString());
 
-                int timeInterval = intervalMin * 60 + intervalSec;
-                int timeBreak = breaklMin * 60 + breakSec;
+                int timeInterval = intervalMin * 60 + intervalSec; //whole time of one cycle in [s]
+                int timeBreak = breaklMin * 60 + breakSec; //whole time of one break in [s]
 
+                /** play start sound
+                 *  show timer menu + stop button and hide config menu and start button
+                 *  start Timer
+                 */
                 if (timeInterval > 0) {
-                    startTimer(timeInterval, intervalCount, timeBreak, intervalSeries);
-
-                    mp.start();
+                    //mp.start();
+                    mp_time_sound.start();
                     btn_Start.setVisibility(View.GONE);
                     LL_Menu.setVisibility(View.GONE);
                     LL_Timer.setVisibility(View.VISIBLE);
                     btn_stop.setVisibility(View.VISIBLE);
+                    startTimer(timeInterval, intervalCount, timeBreak, intervalSeries);
                 } else {
                     Toast.makeText(getBaseContext(),"Work time must be > 0s",Toast.LENGTH_LONG).show();
                 }
             }
         });
 
+        /** repeat to main menu and stop Timer **/
         btn_stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -110,91 +162,126 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 btn_Start.setVisibility(View.VISIBLE);
                 LL_Menu.setVisibility(View.VISIBLE);
                 t.cancel();
+
             }
         });
     }
 
+    /** add AdMob Ads **/
+    private void addAddMob(){
+        MobileAds.initialize(this, "ca-app-pub-8343407965657663~3060933681");
+        mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+    }
+
+    /** Initialize Media Player **/
+    private void initMP(){
+        mp_time_sound = MediaPlayer.create(this, R.raw.beep);
+        mp_finish_5s = MediaPlayer.create(this, R.raw.drum);
+        mp_finish_sound = MediaPlayer.create(this, R.raw.fixbell);
+    }
+
+    /** Initialize Edit Text and Linear Layout **/
+    private void initET_LL(){
+        ET_intervalMin = findViewById(R.id.ET_intervalMin);
+        ET_intervalSec = findViewById(R.id.ET_intervalSec);
+        ET_intervalSeries = findViewById(R.id.ET_intervalSeries);
+        ET_intervalCount = findViewById(R.id.ET_intervalCount);
+        ET_breaklMin = findViewById(R.id.ET_breaklMin);
+        ET_breakSec = findViewById(R.id.ET_breakSec);
+        LL_Timer = findViewById(R.id.LL_Timer);
+        LL_Menu = findViewById(R.id.LL_Menu);
+    }
+
+    /** Initialize +/- buttons and add listeners **/
     public void initButton(){
-        ImageButton IB_intervalTime_minus = (ImageButton) findViewById(R.id.IB_intervalTime_minus);
-        IB_intervalTime_minus.setOnClickListener(this);
+        btn_Start = findViewById(R.id.btn_start);
+        btn_stop = findViewById(R.id.btn_stop);
 
-        ImageButton IB_intervalTime_plus = (ImageButton) findViewById(R.id.IB_intervalTime_plus);
-        IB_intervalTime_plus.setOnClickListener(this);
+        IB_intervalTime_minus = (ImageButton) findViewById(R.id.IB_intervalTime_minus);
+        IB_intervalTime_minus.setOnTouchListener(this);
 
-        IB_intervalTime_plus.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
+        IB_intervalTime_plus = (ImageButton) findViewById(R.id.IB_intervalTime_plus);
+        IB_intervalTime_plus.setOnTouchListener(this);
 
-                switch(event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
+        IB_intervalCount_minus = (ImageButton) findViewById(R.id.IB_intervalCount_minus);
+        IB_intervalCount_minus.setOnTouchListener(this);
 
-                        if (mHandler != null) return true;
-                        mHandler = new Handler();
-                        mHandler.postDelayed(mAction, 300); // delay before start iteration
-                        break;
+        IB_intervalCount_plus = (ImageButton) findViewById(R.id.IB_intervalCount_plus);
+        IB_intervalCount_plus.setOnTouchListener(this);
 
-                    case MotionEvent.ACTION_UP:
-                        if (mHandler == null) return true;
-                        mHandler.removeCallbacks(mAction);
-                        mHandler = null;
-                        break;
-                }
-                return false;
-            }
+        IB_intervalRest_minus = (ImageButton) findViewById(R.id.IB_intervalRest_minus);
+        IB_intervalRest_minus.setOnTouchListener(this);
 
-            Runnable mAction = new Runnable() {
-                @Override public void run() {
-                    setEditTextValue(true, 1);
-                    mHandler.postDelayed(this, 100); // delay iteration time
-                }
-            };
-        });
+        IB_intervalRest_plus = (ImageButton) findViewById(R.id.IB_intervalRest_plus);
+        IB_intervalRest_plus.setOnTouchListener(this);
 
+        IB_Series_minus = (ImageButton) findViewById(R.id.IB_Series_minus);
+        IB_Series_minus.setOnTouchListener(this);
 
-
-
-        ImageButton IB_intervalCount_minus = (ImageButton) findViewById(R.id.IB_intervalCount_minus);
-        IB_intervalCount_minus.setOnClickListener(this);
-        ImageButton IB_intervalCount_plus = (ImageButton) findViewById(R.id.IB_intervalCount_plus);
-        IB_intervalCount_plus.setOnClickListener(this);
-        ImageButton IB_intervalRest_minus = (ImageButton) findViewById(R.id.IB_intervalRest_minus);
-        IB_intervalRest_minus.setOnClickListener(this);
-        ImageButton IB_intervalRest_plus = (ImageButton) findViewById(R.id.IB_intervalRest_plus);
-        IB_intervalRest_plus.setOnClickListener(this);
-        ImageButton IB_Series_minus = (ImageButton) findViewById(R.id.IB_Series_minus);
-        IB_Series_minus.setOnClickListener(this);
-        ImageButton IB_Series_plus = (ImageButton) findViewById(R.id.IB_Series_plus);
-        IB_Series_plus.setOnClickListener(this);
-
+        IB_Series_plus = (ImageButton) findViewById(R.id.IB_Series_plus);
+        IB_Series_plus.setOnTouchListener(this);
     }
 
+    @Override protected void onStop() {
+        super.onStop();
+        t.cancel();
+    }
+    @Override protected void onDestroy() {
+        super.onDestroy();
+        t.cancel();
+    }
+    @Override protected void onPause() {
+        super.onPause();
+        t.cancel();
+    }
+
+    /** set interval/count/break/series Edit Text **/
     public void setEditTextValue(boolean addValue, int etVersion){
 
         if (etVersion == 1){ //interval time
+
             int min = Integer.parseInt(ET_intervalMin.getText().toString());
             int sec = Integer.parseInt(ET_intervalSec.getText().toString());
-Log.d("aaaa", String.valueOf(sec));
-            if (addValue) {
 
+            if (addValue) {
+                //powiekszanie
                 if (sec == 60) {
                     ET_intervalSec.setText("00");
                     min++;
-                    ET_intervalMin.setText(String.valueOf(min));
-                    //ET_intervalSec.setText(00);
-                    //ET_intervalMin.setText(min++);
+                    if (min < 10){
+                        ET_intervalMin.setText("0" + String.valueOf(min));
+                    } else {
+                        ET_intervalMin.setText(String.valueOf(min));
+                    }
                 } else {
                     sec++;
-                    ET_intervalSec.setText(String.valueOf(sec));
+                    if (sec < 10){
+                        ET_intervalSec.setText("0" + String.valueOf(sec));
+                    } else {
+                        ET_intervalSec.setText(String.valueOf(sec));
+                    }
                 }
             } else {
+                //pomniejszanie
                 if (sec == 0) {
                     if(min > 0) {
                         ET_intervalSec.setText("60");
                         min--;
-                        ET_intervalMin.setText(min);
+                        if (min < 10){
+                            ET_intervalMin.setText("0" + String.valueOf(min));
+                        } else {
+                            ET_intervalMin.setText(String.valueOf(min));
+                        }
                     }
                 } else {
-                    ET_intervalSec.setText("00");
+                    sec--;
+                    if (sec < 10){
+                        ET_intervalSec.setText("0" + String.valueOf(sec));
+                    } else {
+                        ET_intervalSec.setText(String.valueOf(sec));
+                    }
                 }
             }
 
@@ -202,42 +289,71 @@ Log.d("aaaa", String.valueOf(sec));
             int count = Integer.parseInt(ET_intervalCount.getText().toString());
 
             if (addValue) {
-                ET_intervalCount.setText(count++);
+                count++;
+                ET_intervalCount.setText(String.valueOf(count));
             } else {
                 if(count > 0) {
-                    ET_intervalCount.setText(count--);
+                    count--;
+                    ET_intervalCount.setText(String.valueOf(count));
                 }
             }
+
         } else if (etVersion == 3) { // rest time
+
 
             int min = Integer.parseInt(ET_breaklMin.getText().toString());
             int sec = Integer.parseInt(ET_breakSec.getText().toString());
 
             if (addValue) {
+                //powiekszanie
                 if (sec == 60) {
-                    ET_breakSec.setText(00);
-                    ET_breaklMin.setText(min++);
+                    ET_breakSec.setText("00");
+                    min++;
+                    if (min < 10){
+                        ET_breaklMin.setText("0" + String.valueOf(min));
+                    } else {
+                        ET_breaklMin.setText(String.valueOf(min));
+                    }
                 } else {
-                    ET_breakSec.setText(sec++);
+                    sec++;
+                    if (sec < 10){
+                        ET_breakSec.setText("0" + String.valueOf(sec));
+                    } else {
+                        ET_breakSec.setText(String.valueOf(sec));
+                    }
                 }
             } else {
+                //pomniejszanie
                 if (sec == 0) {
                     if(min > 0) {
                         ET_breakSec.setText("60");
-                        ET_breaklMin.setText(min--);
+                        min--;
+                        if (min < 10){
+                            ET_breaklMin.setText("0" + String.valueOf(min));
+                        } else {
+                            ET_breaklMin.setText(String.valueOf(min));
+                        }
                     }
                 } else {
-                    ET_breakSec.setText(00);
+                    sec--;
+                    if (sec < 10){
+                        ET_breakSec.setText("0" + String.valueOf(sec));
+                    } else {
+                        ET_breakSec.setText(String.valueOf(sec));
+                    }
                 }
             }
+
         } else if (etVersion == 4) { // series
             int series = Integer.parseInt(ET_intervalSeries.getText().toString());
 
             if (addValue) {
-                ET_intervalSeries.setText(series++);
+                series++;
+                ET_intervalSeries.setText(String.valueOf(series));
             } else {
                 if(series > 0) {
-                    ET_intervalSeries.setText(series--);
+                    series--;
+                    ET_intervalSeries.setText(String.valueOf(series));
                 }
             }
         }
@@ -245,51 +361,100 @@ Log.d("aaaa", String.valueOf(sec));
     }
 
 
+    /** set touch iteration process, when u hold on button time will be increase or decrease **/
+    public boolean setTouchEvent(boolean av, int et, MotionEvent motionEvent){
+        Loc_addValue = av;
+        Loc_etVersion = et;
+
+        switch(motionEvent.getAction()) {
+
+            case MotionEvent.ACTION_DOWN:
+
+                if (mHandler != null) return true;
+                clickDownTime = System.currentTimeMillis();
+                mHandler = new Handler();
+                mHandler.postDelayed(mAction, 300); // delay before start iteration
+                break;
+
+            case MotionEvent.ACTION_UP:
+                long diff = System.currentTimeMillis() - clickDownTime;
+                if(diff < 300 ){
+
+                    setEditTextValue(Loc_addValue, Loc_etVersion);
+                    Log.d("EVEE","curr: " +System.currentTimeMillis()+" , clickDownTime: " + clickDownTime + ", diff " + diff);
+                }
+
+                if (mHandler == null) return true;
+                mHandler.removeCallbacks(mAction);
+                mHandler = null;
+                break;
+
+        }
+
+        return false;
+    }
+
+    /** runnable iteration 100ms cycle **/
+    Runnable mAction = new Runnable() {
+        @Override public void run() {
+            setEditTextValue(Loc_addValue, Loc_etVersion);
+            mHandler.postDelayed(this, 100); // delay iteration time
+        }
+    };
 
 
-
+    /** set touch event on all buttons **/
     @Override
-    public void onClick(View v) {
-
+    public boolean onTouch(View v, MotionEvent motionEvent) {
         switch (v.getId()) {
 
             case R.id.IB_intervalTime_minus:
-                setEditTextValue(false, 1);
+                setTouchEvent(false, 1, motionEvent);
+                //setEditTextValue(false, 1);
                 break;
 
             case R.id.IB_intervalTime_plus:
-                setEditTextValue(true, 1);
+                setTouchEvent(true, 1, motionEvent);
+                //setEditTextValue(true, 1);
                 break;
 
             case R.id.IB_intervalCount_minus:
-                setEditTextValue(false, 2);
+                setTouchEvent(false, 2, motionEvent);
+                //setEditTextValue(false, 2);
                 break;
 
             case R.id.IB_intervalCount_plus:
-                setEditTextValue(true, 2);
+                setTouchEvent(true, 2, motionEvent);
+                //setEditTextValue(true, 2);
                 break;
 
             case R.id.IB_intervalRest_minus:
-                setEditTextValue(false, 3);
+                setTouchEvent(false, 3, motionEvent);
+                //setEditTextValue(false, 3);
                 break;
 
             case R.id.IB_intervalRest_plus:
-                setEditTextValue(true, 3);
+                setTouchEvent(true, 3, motionEvent);
+                //setEditTextValue(true, 3);
                 break;
 
             case R.id.IB_Series_minus:
-                setEditTextValue(false, 4);
+                setTouchEvent(false, 4, motionEvent);
+                //setEditTextValue(false, 4);
                 break;
 
             case R.id.IB_Series_plus:
-                setEditTextValue(true, 4);
+                setTouchEvent(true, 4, motionEvent);
+                //setEditTextValue(true, 4);
                 break;
 
             default:
                 break;
         }
+        return false;
     }
 
+    /** convert string to number or to 0 if is empty**/
     private int checkEmptyField(String str){
 
         if (TextUtils.isEmpty(str)){
@@ -298,7 +463,6 @@ Log.d("aaaa", String.valueOf(sec));
             return Integer.parseInt(str);
         }
     }
-
 
 
     private void startTimer(final int workTime, final int workCount, final int restTime, final int seriesCount){
@@ -318,7 +482,7 @@ Log.d("aaaa", String.valueOf(sec));
 
         totalTime = (workTime * workCount + restTime) * seriesCount - restTime;
 
-
+        /** if series > 0 then show total series and total time else hide it**/
         if(mSeriesCount > 0){
             showTotalSeries();
             showTimeTotal();
@@ -326,6 +490,8 @@ Log.d("aaaa", String.valueOf(sec));
             hideTotalSeries();
             hideTimeTotal();
         }
+
+        /** change work text size to bigger **/
         startWork();
 
         t = new Timer();
@@ -430,6 +596,7 @@ Log.d("aaaa", String.valueOf(sec));
     }
 
 
+    /** change work text size **/
     private void startWork(){
         TextView TV_work_time_total = (TextView) findViewById(R.id.TV_work_time_total);
         TextView TV_rest_time_total = (TextView) findViewById(R.id.TV_rest_time_total);
@@ -437,6 +604,7 @@ Log.d("aaaa", String.valueOf(sec));
         TV_rest_time_total.setTextSize(15);
     }
 
+    /** change rest text size **/
     private void startRest(){
         TextView TV_work_time_total = (TextView) findViewById(R.id.TV_work_time_total);
         TextView TV_rest_time_total = (TextView) findViewById(R.id.TV_rest_time_total);
@@ -503,7 +671,7 @@ Log.d("aaaa", String.valueOf(sec));
         TV_rest_time.setText(getMin(RestTime) + ":" + getSec(RestTime));
     }
 
-
+    /** get minutes from whole int time **/
     private String getMin(int time){
         int int_min = time / 60;
         String string_min;
@@ -517,6 +685,7 @@ Log.d("aaaa", String.valueOf(sec));
         return string_min;
     }
 
+    /** get seconds from whole int time **/
     private String getSec(int time){
         int int_sec = time % 60;
         String string_sec;
@@ -530,9 +699,7 @@ Log.d("aaaa", String.valueOf(sec));
         return string_sec;
     }
 
-
-
-
+    /** play sound **/
     private void playSound(int type){
 
         switch (type) {
@@ -551,20 +718,90 @@ Log.d("aaaa", String.valueOf(sec));
 
 
 
-    private void setTvText(TextView ET, int min, int sec){
-        if(min <10){
-            if(sec<10){
-                ET.setText("0" + min + ":0"+ sec);
-            } else{
-                ET.setText("0" + min + ":"+ sec);
-            }
-        }else{
-            if(sec<10){
-                ET.setText("" + min + ":0"+ sec);
-            } else{
-                ET.setText("" + min + ":"+ sec);
-            }
-        }
 
-    }
+
+private void startTimer(){
+
+
+/**
+
+    final Handler handler = new Handler();
+    Timer timer = new Timer(false);
+    TimerTask timerTask = new TimerTask() {
+        @Override
+        public void run() {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d("EVEE","start");
+                    playSound(1);
+                }
+            });
+        }
+    };
+    t.scheduleAtFixedRate(timerTask, 0, 1000); // every 5 seconds.
+    //timer.scheduleAtFixedRate(timerTask, 0, 1000); // every 5 seconds.
+
+
+**/
+
+
+
+
+
+    t = new Timer();
+    t.scheduleAtFixedRate(new TimerTask() {
+
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+
+                @Override
+                public void run() {
+                    Log.d("EVEE","start");
+                    playSound(1);
+                }
+                });
+            }
+        }, 0, 1000);
+
+
+
+
+//    Handler handler = new Handler();
+//    handler.postDelayed(new Runnable() {
+//        @Override
+//        public void run() {
+//            Log.d("EVEE","start");
+//            playSound(1);
+//        }
+//    }, 1000);
+
+
+//    handler = new Handler();
+//    myRunnable = new Runnable() {
+//        @Override
+//        public void run() {
+//            Log.d("EVEE","start");
+//            playSound(1);
+//        }
+//    };
+//    handler.postDelayed(myRunnable, 1000);
 }
+private void stopTimer(){
+
+        //t.cancel();
+
+        if(t != null){
+            t.cancel();
+        //handler.removeCallbacks(myRunnable);
+        Log.d("EVEE","stop");
+    }
+
+//    if(handler != null){
+//        handler.removeCallbacks(myRunnable);
+//        Log.d("EVEE","stop");
+//    }
+}
+}
+

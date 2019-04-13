@@ -4,93 +4,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    android:gravity="center_horizontal"
+    android:gravity="center"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.kakiridev.SIT.simplyintervaltimer.MainActivity">
 
-    <LinearLayout
-        android:id="@+id/LL_Timer"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_weight="2"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
 
-        <!-- Total Time -->
-        <TextView
-            android:id="@+id/TV_time_total"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="Total time: 10:00"
-            android:textSize="20sp"
-            android:layout_marginBottom="30dp"/>
+    <view
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-<!-- Series -->
-        <TextView
-            android:id="@+id/TV_series"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="SERIES 1 / 5"
-            android:textSize="30sp" />
-
-        <TextView
-            android:id="@+id/TV_repeats_count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="REPEATS 1 / 10"
-            android:textSize="30sp"
-            android:layout_marginBottom="20dp"/>
-
-
-
-<!-- Work Time -->
-        <TextView
-            android:id="@+id/TV_work_time_total"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal|bottom"
-            android:text="WORK TIME: 15:00"
-            android:textSize="20sp" />
-
-
-
-        <TextView
-            android:id="@+id/TV_work_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="00:00"
-            android:textSize="70sp" />
-
-<!-- Rest Time -->
-        <TextView
-            android:id="@+id/TV_rest_time_total"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="REST TIME: 05:00"
-            android:textSize="20sp" />
-
-
-
-
-
-
-        <Button
-            android:id="@+id/btn_stop"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="25dp"
-            android:text="STOP" />
-    </LinearLayout>
-
-
-
+    </view>
 
 
     <LinearLayout
@@ -363,42 +288,64 @@
         </GridLayout>
 
 
+        <LinearLayout
+            android:layout_margin="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
 
+            <Button
+                android:id="@+id/btn_start"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="START"
+                android:visibility="visible"/>
+
+            <Button
+                android:id="@+id/btn_pause"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="PAUSE"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/btn_reset"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="RESET"
+                android:visibility="gone"/>
+
+
+
+
+        </LinearLayout>
 
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@color/colorAccent"
+    <view
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_weight="1">
-        <Button
-            android:id="@+id/btn_start"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="START" />
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            />
+    </view>
+
         <com.google.android.gms.ads.AdView
 
             xmlns:ads="http://schemas.android.com/apk/res-auto"
             android:id="@+id/adView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
             android:layout_alignParentBottom="true"
+            android:layout_gravity="center_horizontal"
+            android:background="#555555"
             ads:adSize="BANNER"
-            android:background="@color/colorAccent"
-            ads:adUnitId="ca-app-pub-8343407965657663/6900531377">
-        </com.google.android.gms.ads.AdView>
+            ads:adUnitId="ca-app-pub-8343407965657663/6900531377"></com.google.android.gms.ads.AdView>
 
-    </LinearLayout>
+
 
 
 
